@@ -1,0 +1,2 @@
+Recursos opcionales generados con Higgsfield AI.
+Ver README.md → "Higgsfield AI (opcional)". Si falta manifest.json, la web usa materiales procedurales.
