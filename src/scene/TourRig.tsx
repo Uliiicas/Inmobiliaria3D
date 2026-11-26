@@ -4,6 +4,7 @@ import { CatmullRomCurve3, MathUtils, PerspectiveCamera, Vector3 } from 'three'
 import { SHOTS } from '../data/tour'
 import { useStore } from '../state/store'
 import { runtime } from '../lib/runtime'
+import { CAPTURE } from '../lib/capture'
 
 /**
  * Cámara del recorrido cinematográfico: posición y punto de mira viajan sobre dos curvas
@@ -38,7 +39,7 @@ export function TourRig() {
     const target = st.tourProgress
     // amortiguación exponencial independiente del frame rate
     const k = st.reducedMotion ? 1 - Math.exp(-dt * 12) : 1 - Math.exp(-dt * 2.6)
-    runtime.tour = MathUtils.lerp(runtime.tour, target, k)
+    runtime.tour = CAPTURE ? target : MathUtils.lerp(runtime.tour, target, k)
     if (Math.abs(runtime.tour - target) < 1e-5) runtime.tour = target
     const p = MathUtils.clamp(runtime.tour, 0, 1)
 
@@ -46,7 +47,7 @@ export function TourRig() {
     tgtCurve.getPoint(p, tgt)
 
     // parallax sutil con el puntero y respiración de cámara en mano
-    if (!st.reducedMotion) {
+    if (!st.reducedMotion && !CAPTURE) {
       pointer.current.x = MathUtils.lerp(pointer.current.x, state.pointer.x, 0.04)
       pointer.current.y = MathUtils.lerp(pointer.current.y, state.pointer.y, 0.04)
       const t = state.clock.elapsedTime
@@ -56,7 +57,8 @@ export function TourRig() {
       tgt.y += pointer.current.y * 0.22
     }
     if (!lookSmoothed.current) lookSmoothed.current = tgt.clone()
-    lookSmoothed.current.lerp(tgt, 1 - Math.exp(-dt * 8))
+    if (CAPTURE) lookSmoothed.current.copy(tgt)
+    else lookSmoothed.current.lerp(tgt, 1 - Math.exp(-dt * 8))
     camera.position.copy(pos)
     look.copy(lookSmoothed.current)
     camera.lookAt(look)

@@ -7,6 +7,7 @@ import { HalfFloatType, MathUtils } from 'three'
 import { useStore } from '../state/store'
 import { PROFILES } from '../lib/quality'
 import { runtime } from '../lib/runtime'
+import { CAPTURE } from '../lib/capture'
 
 const BLOOM = 0.3
 
@@ -26,7 +27,7 @@ export function Effects() {
     const e = dof.current
     if (!e) return
     const target = MathUtils.clamp(runtime.focus, 2, 40)
-    e.cocMaterial.worldFocusDistance = MathUtils.lerp(e.cocMaterial.worldFocusDistance || target, target, 0.08)
+    e.cocMaterial.worldFocusDistance = CAPTURE ? target : MathUtils.lerp(e.cocMaterial.worldFocusDistance || target, target, 0.08)
   })
   if (!p.post) return null
   const useDof = p.dof && mode === 'tour' && !reduced
