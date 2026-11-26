@@ -84,3 +84,9 @@ recibir las solicitudes por POST JSON; sin él funciona en modo demostración.
   texturas fotográficas y el código de escena puede cargar un GLB si en el futuro se dispone de uno.
 - La iluminación global se aproxima con mapa de entorno dinámico, luz hemisférica y oclusión ambiental en pantalla; no hay
   GI horneada.
+
+## Publicación en GitHub Pages
+
+`.github/workflows/pages.yml` compila y publica el sitio en cada push a `main`
+(URL: `https://<usuario>.github.io/Inmobiliaria3D/`). En el repositorio, *Settings → Pages → Source* debe estar en
+**GitHub Actions**. Para fusionar recursos de Higgsfield, agréguelos a `public/higgsfield/` antes del push.
