@@ -2,12 +2,12 @@
   "version": 1,
   "glb": "models/house.glb",
   "lightmap": {
-    "high": "models/lightmap-4k.ktx2",
+    "high": "models/lightmap-3k.ktx2",
     "low": "models/lightmap-2k.ktx2",
     "scale": {
-      "sky": 0.9998984336853027,
-      "sun": 0.04868654906749725,
-      "lamps": 6.096860408782959
+      "sky": 0.9999083876609802,
+      "sun": 0.046553581953048706,
+      "lamps": 4.61997652053833
     }
   },
   "textures": {

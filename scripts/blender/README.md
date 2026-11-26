@@ -11,7 +11,7 @@ Todo corre sin interfaz gráfica, con Blender como módulo de Python (`pip insta
 | Archivo | Contenido |
 | --- | --- |
 | `public/models/house.glb` | Arquitectura y mobiliario (meshopt, UV de lightmap en el canal 1, texturas de modelos en KTX2) |
-| `public/models/lightmap-4k.ktx2` / `-2k` | Atlas de luz. R = cielo, G = rebote del sol, B = luminarias. Codificación raíz cuadrada |
+| `public/models/lightmap-3k.ktx2` / `-2k` | Atlas de luz (horneado a 4096, publicado a 3072 y 2048). R = cielo, G = rebote del sol, B = luminarias. Codificación raíz cuadrada |
 | `public/models/textures/<material>/` | Texturas en mosaico de cada material (color, normal y rugosidad en KTX2) |
 | `public/models/house.json` | Manifiesto: rutas, escalas del atlas y metros por repetición de cada textura |
 

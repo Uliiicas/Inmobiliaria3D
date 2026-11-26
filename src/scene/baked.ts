@@ -155,7 +155,7 @@ export async function loadBakedHouse(
   loader.setKTX2Loader(getKTX2(gl))
   const [gltf, lightMap] = await Promise.all([
     loader.loadAsync(`${BASE}${manifest.glb}`, (e) => e.total && onProgress(e.loaded / e.total)),
-    loadTexture(gl, quality === 'low' ? manifest.lightmap.low : manifest.lightmap.high),
+    loadTexture(gl, quality === 'high' ? manifest.lightmap.high : manifest.lightmap.low),
   ])
   lightMap.colorSpace = NoColorSpace
   lightMap.flipY = false

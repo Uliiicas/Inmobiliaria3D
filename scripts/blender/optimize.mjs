@@ -4,7 +4,7 @@
  *   node scripts/blender/optimize.mjs [carpeta-de-trabajo]
  *
  *  - house_raw.glb → public/models/house.glb   (soldado, cuantizado, meshopt, texturas KTX2)
- *  - lightmap.png  → public/models/lightmap-{4k,2k}.ktx2  (UASTC: sin bandas en los degradés)
+ *  - lightmap.png  → public/models/lightmap-{3k,2k}.ktx2  (UASTC: sin bandas en los degradés)
  *  - texturas PBR en mosaico de cada material → public/models/textures/<material>/*.ktx2
  *  - public/models/house.json con rutas y escalas del atlas de luz
  */
@@ -106,11 +106,12 @@ if (!only || only === 'glb') {
 
 if (!only || only === 'lightmap') {
   const lm = JSON.parse(readFileSync(join(OUT, 'lightmap.json'), 'utf8'))
-  const UA = { isUASTC: true, needSupercompression: true, enableRDO: true, rdoQualityLevel: 1.5, isPerceptual: false, uastcLDRQualityLevel: 2 }
-  await ktx(join(OUT, 'lightmap.png'), join(PUB, 'lightmap-4k.ktx2'), UA)
+  const UA = { isUASTC: true, needSupercompression: true, enableRDO: true, rdoQualityLevel: 3, isPerceptual: false, uastcLDRQualityLevel: 2 }
+  // el codificador admite hasta ~12 Mpx por imagen: el atlas de 4096 se publica a 3072
+  await ktx(join(OUT, 'lightmap.png'), join(PUB, 'lightmap-3k.ktx2'), UA, 3072)
   await ktx(join(OUT, 'lightmap.png'), join(PUB, 'lightmap-2k.ktx2'), UA, 2048)
-  manifest.lightmap = { high: 'models/lightmap-4k.ktx2', low: 'models/lightmap-2k.ktx2', scale: lm.scale }
-  console.log('lightmap', mb(join(PUB, 'lightmap-4k.ktx2')), mb(join(PUB, 'lightmap-2k.ktx2')))
+  manifest.lightmap = { high: 'models/lightmap-3k.ktx2', low: 'models/lightmap-2k.ktx2', scale: lm.scale }
+  console.log('lightmap', mb(join(PUB, 'lightmap-3k.ktx2')), mb(join(PUB, 'lightmap-2k.ktx2')))
 }
 
 if (!only || only === 'textures') {
