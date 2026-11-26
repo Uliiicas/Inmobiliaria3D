@@ -3,7 +3,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useStore, type Quality } from '../state/store'
 import { PROPERTY } from '../data/rooms'
 import { veil } from '../scene/ExploreRig'
-import { IconGauge, IconInfo, IconPano } from './Icons'
+import { IconFilm, IconGauge, IconInfo, IconPano } from './Icons'
+
+/** Página del recorrido en video (video/index.html) */
+export const VIDEO_URL = `${import.meta.env.BASE_URL}video/`
 
 const ease = [0.22, 1, 0.36, 1] as const
 
@@ -63,6 +66,16 @@ export function TopBar({ onExplore, onHome }: { onExplore: () => void; onHome: (
         <span className="eyebrow mt-1.5 block !text-[9px]">{PROPERTY.location} · Private Estates</span>
       </button>
       <nav className="pointer-events-auto flex items-center gap-2">
+        {mode === 'tour' && (
+          <a className="btn btn-line !h-[42px] !px-4 max-lg:!hidden" href={VIDEO_URL}>
+            <IconFilm width={16} height={16} /> Ver en video
+          </a>
+        )}
+        {mode === 'tour' && (
+          <a className="icon-btn lg:!hidden" href={VIDEO_URL} aria-label="Ver el recorrido en video" title="Recorrido en video">
+            <IconFilm />
+          </a>
+        )}
         {mode === 'tour' && (
           <button className="btn btn-line !h-[42px] !px-4 max-sm:!hidden" onClick={onExplore}>
             <IconPano width={16} height={16} /> Explorar propiedad 360°

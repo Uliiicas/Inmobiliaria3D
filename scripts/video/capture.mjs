@@ -57,8 +57,8 @@ for (let i = start; i < end; i++) {
   const p = from + ((to - from) * i) / (frames - 1)
   await page.evaluate(([p, h]) => window.__capture.frame(p, h), [p, hour])
   for (let s = 0; s < settle; s++) await raf()
-  await page.screenshot({ path: file, type: 'jpeg', quality: 92 })
-  if (i % 20 === 0) {
+  await page.screenshot({ path: file, type: 'jpeg', quality: 92, timeout: 600_000 })
+  if (i % 10 === 0 || i - start < 3) {
     const el = (Date.now() - t0) / 1000
     console.log(`${i}/${end}  ${(el / (i - start + 1)).toFixed(2)} s/cuadro`)
   }
