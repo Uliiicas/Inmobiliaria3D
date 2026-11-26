@@ -23,6 +23,7 @@ import { computeDaylight, type DaylightState } from '../lib/daylight'
 import { useStore } from '../state/store'
 import { PROFILES } from '../lib/quality'
 import { runtime } from '../lib/runtime'
+import { CAPTURE } from '../lib/capture'
 import { LAMPS } from '../data/lighting'
 import { ROOF } from '../data/rooms'
 import { bakedUniforms } from './baked'
@@ -111,7 +112,7 @@ export function Atmosphere() {
   useFrame((_, dt) => {
     const st = useStore.getState()
     // la hora mostrada persigue la elegida: transiciones graduales y continuas
-    const k = st.reducedMotion ? 1 : 1 - Math.exp(-dt * 3.2)
+    const k = st.reducedMotion || CAPTURE ? 1 : 1 - Math.exp(-dt * 3.2)
     runtime.hour = MathUtils.lerp(runtime.hour, st.hour, k)
     if (Math.abs(runtime.hour - st.hour) < 0.002) runtime.hour = st.hour
     const d = computeDaylight(runtime.hour, state.current)

@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { CHAPTERS, SHOTS, shotToProgress } from '../data/tour'
 import { PROPERTY } from '../data/rooms'
 import { useStore } from '../state/store'
-import { IconArrow, IconPano } from './Icons'
+import { IconArrow, IconFilm, IconPano } from './Icons'
+import { VIDEO_URL } from './Chrome'
 import { loadHiggsfieldManifest, type HiggsfieldAsset } from '../lib/higgsfield'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -66,6 +67,9 @@ export function Hero({ onExplore }: { onExplore: () => void }) {
                   <button className="btn btn-line" onClick={onExplore}>
                     <IconPano width={16} height={16} /> Explorar en 360°
                   </button>
+                  <a className="btn btn-line" href={VIDEO_URL}>
+                    <IconFilm width={16} height={16} /> Ver en video
+                  </a>
                 </div>
               </motion.div>
               <motion.dl

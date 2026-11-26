@@ -12,6 +12,7 @@ import { ExploreOverlay, Minimap } from './ui/ExploreOverlay'
 import { Contact } from './ui/Contact'
 import { Fallback } from './ui/Fallback'
 import { veil } from './scene/ExploreRig'
+import { CAPTURE } from './lib/capture'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -91,6 +92,19 @@ export default function App() {
     if (useStore.getState().mode === 'explore') exitExplore()
     scrollToProgress(0)
   }, [exitExplore])
+
+  if (CAPTURE) {
+    // la captura conduce progreso y hora desde scripts/video/capture.mjs
+    ;(window as unknown as { __capture: unknown }).__capture = {
+      ready: () => useStore.getState().ready,
+      frame: (progress: number, hour: number) => useStore.setState({ tourProgress: progress, hour }),
+    }
+    return (
+      <Suspense fallback={null}>
+        <Experience />
+      </Suspense>
+    )
+  }
 
   if (!webgl) {
     return (

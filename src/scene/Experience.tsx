@@ -10,6 +10,7 @@ import { TourRig } from './TourRig'
 import { ExploreRig } from './ExploreRig'
 import { Markers } from './Markers'
 import { runtime } from '../lib/runtime'
+import { CAPTURE } from '../lib/capture'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import type { Material, Mesh } from 'three'
@@ -47,7 +48,7 @@ export default function Experience() {
   return (
     <Canvas
       className="!fixed inset-0"
-      dpr={p.dpr}
+      dpr={CAPTURE ? 1 : p.dpr}
       shadows={p.shadows ? { type: quality === 'high' ? PCFSoftShadowMap : VSMShadowMap } : false}
       camera={{ fov: 38, near: 0.08, far: 6000, position: [17, 7.5, -42] }}
       gl={{
@@ -61,14 +62,16 @@ export default function Experience() {
         if (import.meta.env.DEV) (window as unknown as { __three: unknown }).__three = { gl, scene, runtime }
       }}
     >
-      <PerformanceMonitor
-        flipflops={2}
-        onDecline={() => {
-          // se baja un escalón como máximo una vez por sesión salvo elección manual
-          if (!locked && quality === 'high') set({ quality: DOWN[quality] })
-        }}
-      />
-      <AdaptiveDpr pixelated={false} />
+      {!CAPTURE && (
+        <PerformanceMonitor
+          flipflops={2}
+          onDecline={() => {
+            // se baja un escalón como máximo una vez por sesión salvo elección manual
+            if (!locked && quality === 'high') set({ quality: DOWN[quality] })
+          }}
+        />
+      )}
+      {!CAPTURE && <AdaptiveDpr pixelated={false} />}
       <Clock />
       <ShadowSync />
       <Atmosphere />
