@@ -22,6 +22,7 @@ import mathutils  # noqa: E402
 import numpy as np  # noqa: E402
 
 import kit  # noqa: E402
+import soft  # noqa: E402
 from common import (  # noqa: E402
     EMISSIVE, FLAT, GEO, MATS, MODELS, NO_LIGHTMAP, OUT, apply_modifiers, clear_scene, link, load_json,
     mesh_from_arrays, processed_texture_dir, select_only, set_active, t2b, weld,
@@ -141,6 +142,49 @@ def box_uv(obj, scale=1.0):
             uv.data[li].uv = (u * scale, v * scale)
 
 
+def cut_faces(obj, boxes):
+    """Borra de `obj` las caras cuyo centro cae en alguna caja ((x0,y0,z0),(x1,y1,z1), mats) — coords Blender."""
+    import bmesh
+
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    names = [m.name for m in obj.data.materials]
+    kill = []
+    for f in bm.faces:
+        c = f.calc_center_median()
+        for lo, hi, mats in boxes:
+            if all(lo[i] <= c[i] <= hi[i] for i in range(3)) and (mats is None or names[f.material_index] in mats):
+                kill.append(f)
+                break
+    bmesh.ops.delete(bm, geom=kill, context='FACES')
+    bm.to_mesh(obj.data)
+    bm.free()
+    print('cut_faces:', len(kill), 'caras')
+
+
+def bbox3(x0, y0, z0, x1, y1, z1, mats=None):
+    """Caja en coordenadas de la web (three) → caja Blender para cut_faces."""
+    a, b = t2b(x0, y0, z0), t2b(x1, y1, z1)
+    lo = tuple(min(a[i], b[i]) - 0.002 for i in range(3))
+    hi = tuple(max(a[i], b[i]) + 0.002 for i in range(3))
+    return lo, hi, mats
+
+
+def bevel_arch(o, width=0.01):
+    """Canto suave de 1 cm en aristas vivas de la arquitectura: atrapa luz como en una obra real."""
+    tris0 = sum(len(p.vertices) - 2 for p in o.data.polygons)
+    m = o.modifiers.new('bevel', 'BEVEL')
+    m.width = width
+    m.segments = 1
+    m.limit_method = 'ANGLE'
+    m.angle_limit = math.radians(40)
+    m.use_clamp_overlap = True
+    m.harden_normals = True
+    apply_modifiers(o)
+    tris1 = sum(len(p.vertices) - 2 for p in o.data.polygons)
+    print('bevel arch:', tris0, '→', tris1, 'tris')
+
+
 # ─────────────────────────────── modelos Poly Haven ───────────────────────────────
 
 _ph_cache = {}
@@ -214,7 +258,16 @@ def assemble():
     KEEP = {'pendantLine', 'hedge'}  # piezas procedurales que se conservan (con bevel)
     kept = []
     arch_entries = by_tag.pop('arch')
-    kept.append(object_from_chunk('arch', raw, arch_entries, M))
+    arch = object_from_chunk('arch', raw, arch_entries, M)
+    kept.append(arch)
+    F2 = 3.71
+    cut_faces(arch, [
+        bbox3(-2.69, 0, -7.2, -2.31, 0.44, -6.6, {'ceramic'}),  # inodoros de caja
+        bbox3(-10.59, 0, -2.8, -10.21, 0.44, -2.2, {'ceramic'}),
+        bbox3(10.5, 0.91, -7.75, 11.5, 0.94, -7.45, {'metal'}),  # anafe plano
+        bbox3(7.24, F2, -7.71, 7.54, F2 + 2.45, -2.39, {'leather', 'linen', 'wool'}),  # libros en bloque
+    ])
+    bevel_arch(arch)
 
     furniture = []
     trees = []
@@ -255,9 +308,9 @@ def assemble():
         elif kind == 'plant':
             s = a['scale']
             if plant_i % 2 == 0:
-                ph.append(place_ph('potted_plant_01', loc, plant_i * 1.3, s * 1.05, max_tris=18000))
+                ph.append(place_ph('potted_plant_01', loc, plant_i * 1.3, s * 1.05, max_tris=9000))
             else:
-                ph.append(place_ph('potted_plant_02', loc, plant_i * 1.3, s * 1.45, max_tris=14000))
+                ph.append(place_ph('potted_plant_02', loc, plant_i * 1.3, s * 1.45, max_tris=8000))
             plant_i += 1
         elif kind == 'floorLamp':
             furniture.append(kit.floor_lamp(M, tag, loc))
@@ -284,6 +337,11 @@ def assemble():
     ph.append(place_ph('ceramic_vase_01', t2b(10.3, 0.75, 5.0), 0, 0.9))
     ph.append(place_ph('potted_plant_04', t2b(11.9, 0.945, -2.5), 0.4, 1.3))
     ph.append(place_ph('ceramic_vase_03', t2b(-7.7, 0.5, 6.4), 0, 0.8))
+    ph.append(place_ph('wooden_bowl_01', t2b(11.9, 0.945, -2.45), 0.3, 1.2))
+    ph.append(place_ph('ceramic_vase_04', t2b(13.65, 0.8, 2.35), 0.8, 1.0))
+    ph.append(place_ph('ceramic_vase_04', t2b(-7.68, 0.5, 3.0), 2.1, 0.8))
+
+    furniture += interior_details(M, F2)
 
     for o in furniture:
         box_uv(o)
@@ -318,6 +376,56 @@ def assemble():
         o.name = f"{o['ph']}_{i}"
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     report()
+
+
+def interior_details(M, F2):
+    """Piezas que en la web eran cajas: baños, cocina, biblioteca, cortinas."""
+    out = []
+    R = math.pi / 2
+    # baños: inodoros suspendidos, bachas de apoyo con grifería de pared y toallas
+    out.append(kit.toilet(M, 'toilet_hall', t2b(-2.5, 0, -6.9), 0))
+    out.append(kit.toilet(M, 'toilet_guest', t2b(-10.4, 0, -2.5), 0))
+    out.append(kit.vessel_basin(M, 'basin_hall', t2b(-3.5, 0.81, -7.6), 0, 0.32))
+    for z in (3.9, 5.3):
+        out.append(kit.vessel_basin(M, f'basin_master_{z}', t2b(-13.62, F2 + 0.9, z), R, 0.31))
+    for x in (9.2, 10.9):
+        out.append(kit.vessel_basin(M, f'basin_shared_{x}', t2b(x, F2 + 0.9, -7.68), 0, 0.30))
+    out.append(kit.vessel_basin(M, 'basin_guest', t2b(-13.55, 0.9, 0.25), R, 0.43))
+    out.append(kit.towel(M, 'towel_hall', t2b(-2.6, 1.05, -7.86), 0, 0.45, 0.5))
+    out.append(kit.towel(M, 'towel_master', t2b(-13.86, F2 + 1.1, 6.7), R, 0.55, 0.6))
+    out.append(kit.towel(M, 'towel_shared', t2b(11.5, F2 + 1.05, -7.9), 0, 0.5, 0.55, 'wool'))
+    # cocina: bacha con grifo cuello de cisne en la isla y anafe vitrocerámico
+    out.append(kit.sink_faucet(M, 'sink', t2b(10.0, 0.945, -2.6), 0))
+    out.append(kit.cooktop(M, 'cooktop', t2b(11.0, 0.92, -7.6), 0))
+    # juntas de sombra entre frentes de roble (bajo mesada y columnas)
+    g = []
+    for i in range(1, 10):
+        x = 8.1 + (13.98 - 8.1) * i / 10
+        g.append(kit.rigid_box('g', M['concreteDark'], x, 7.329, 0.44, 0.005, 0.004, 0.86, 0.0005))
+    for i in range(1, 11):
+        z = -7.3 + (6.7) * i / 11
+        g.append(kit.rigid_box('g', M['concreteDark'], 13.329, -z, 1.35, 0.004, 0.005, 2.68, 0.0005))
+    g.append(kit.rigid_box('g', M['concreteDark'], 13.329, 3.6, 2.02, 0.004, 0.66, 0.005, 0.0005))
+    out.append(kit.group(g, 'grooves', (0, 0, 0), 0))
+    # biblioteca: libros sueltos en cada estante
+    for k in range(5):
+        parts = kit.books(M, f'books{k}', 0.02, 5.28, 0, 0.27, seed=31 + k * 7)
+        out.append(kit.group(parts, f'books{k}', (7.39, 7.7, F2 + 0.03 + k * 0.48), -R))
+    # cortinas de lino a los lados de los ventanales de los dormitorios (riel de bronce arriba)
+    h = 7.1 - F2 - 0.07
+    for i, (cx, w) in enumerate(((-9.35, 1.0), (-2.65, 1.0), (8.6, 0.9), (13.52, 0.86))):
+        c = soft.curtain(f'curtain{i}', M['linen'], w, h, seed=i)
+        out.append(kit.group([c], f'curtain{i}', t2b(cx, F2 + 0.02, 9.36), 0))
+    c = soft.curtain('curtain_e', M['linen'], 0.86, h, seed=9)
+    out.append(kit.group([c], 'curtain_e', t2b(14.0, F2 + 0.02, 4.2), R))
+    for x0, x1 in ((-9.9, -2.1), (8.1, 14.0)):
+        out.append(kit.group([kit.cylinder('rail', M['bronze'], 0, 0, 0, 0.012, 0.012, x1 - x0, 12)], 'rail', (0, 0, 0), 0))
+        r = out[-1]
+        r.rotation_euler = (0, R, 0)
+        r.location = t2b((x0 + x1) / 2, 7.1 - 0.05, 9.36)
+        select_only([r])
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    return out
 
 
 def report():
