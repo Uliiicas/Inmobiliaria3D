@@ -99,6 +99,18 @@ export function patchLightmapped(m: MeshStandardMaterial) {
       )
     shader.fragmentShader = shader.fragmentShader
       .replace(
+        '#include <map_fragment>',
+        `#include <map_fragment>
+#if defined( USE_MAP ) && defined( MACRO_VARIATION )
+  // rompe la repetición del mosaico: el mismo mapa a escala de varios metros modula el color
+  vec3 mcA = texture2D( map, vMapUv * 0.137 + vec2( 0.31, 0.57 ) ).rgb;
+  vec3 mcB = texture2D( map, vMapUv.yx * 0.071 + vec2( 0.73, 0.19 ) ).rgb;
+  vec3 mcM = texture2D( map, vMapUv, 12.0 ).rgb;
+  float mcL = dot( mcA + mcB, vec3( 0.1667 ) ) / max( dot( mcM, vec3( 0.3333 ) ), 0.04 );
+  diffuseColor.rgb *= clamp( mix( 1.0, mcL, 0.45 ), 0.72, 1.28 );
+#endif`,
+      )
+      .replace(
         '#include <lightmap_pars_fragment>',
         `#include <lightmap_pars_fragment>
 uniform vec3 uLMScale; uniform vec3 uSkyIrr; uniform vec3 uSunIrr; uniform vec3 uLampIrr; uniform float uSunGate;`,
@@ -237,7 +249,10 @@ export function upgradeTextures(gl: WebGLRenderer, set: MaterialSet, manifest: B
             tex.colorSpace = slot === 'map' ? SRGBColorSpace : NoColorSpace
             const old = m[slot]
             m[slot] = tex
-            if (slot === 'map') m.color.set('#ffffff')
+            if (slot === 'map') {
+              m.color.set('#ffffff')
+              m.defines = { ...m.defines, MACRO_VARIATION: '' }
+            }
             if (slot === 'roughnessMap') m.roughness = 1
             if (slot === 'normalMap') m.normalScale.set(0.9, 0.9)
             old?.dispose()

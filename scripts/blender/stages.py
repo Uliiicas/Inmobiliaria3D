@@ -23,7 +23,7 @@ def is_lightmapped(o):
 
 
 def lm_objects():
-    return [o for o in bpy.context.scene.objects if is_lightmapped(o)]
+    return [o for o in bpy.context.scene.objects if is_lightmapped(o) and len(o.data.polygons)]
 
 
 # ─────────────────────────────── UV de lightmap ───────────────────────────────
@@ -45,13 +45,27 @@ def uv():
     tree = scene_bvh()
     select_only(objs)
     bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.select_all(action='SELECT')
+    # sólo se despliegan las caras sin UV de atlas propia (los textiles ya traen la suya desde soft.py)
+    import bmesh
+
+    pre = 0
+    for o in objs:
+        bm = bmesh.from_edit_mesh(o.data)
+        mark = bm.faces.layers.int.get('lm_pre')
+        for f in bm.faces:
+            has = bool(mark is not None and f[mark])
+            f.select_set(not has)
+            pre += has
+        bmesh.update_edit_mesh(o.data)
+    print(f'caras con UV de atlas previa: {pre}')
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.0, area_weight=0.0, correct_aspect=True, scale_to_bounds=False)
+    bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.select_all(action='SELECT')
     bpy.ops.uv.average_islands_scale()
+    clamp_islands(objs)
     shrink_hidden_faces(objs, tree)
     bpy.ops.uv.select_all(action='SELECT')
-    bpy.ops.uv.pack_islands(udim_source='CLOSEST_UDIM', rotate=True, scale=True, margin_method='ADD', margin=5.0 / LM_SIZE, shape_method='CONCAVE')
+    bpy.ops.uv.pack_islands(udim_source='CLOSEST_UDIM', rotate=True, scale=True, margin_method='ADD', margin=3.0 / LM_SIZE, shape_method='CONCAVE')
     bpy.ops.object.mode_set(mode='OBJECT')
     # texel efectivo
     used = 0.0
@@ -82,6 +96,55 @@ def scene_bvh():
     return BVHTree.FromPolygons(verts, polys, epsilon=0.0)
 
 
+def clamp_islands(objs, max_span=12.0):
+    """
+    Los biseles finos pueden quedar casi sin ancho en UV; al igualar densidades esas islas crecen
+    cientos de metros y el empaquetado encoge todo lo demás. Se limitan a max_span metros.
+    """
+    import bmesh
+
+    fixed = 0
+    for o in objs:
+        bm = bmesh.from_edit_mesh(o.data)
+        lay = bm.loops.layers.uv['lightmap']
+        bm.faces.ensure_lookup_table()
+        parent = list(range(len(bm.faces)))
+
+        def root(a):
+            while parent[a] != a:
+                parent[a] = parent[parent[a]]
+                a = parent[a]
+            return a
+
+        for e in bm.edges:
+            lf = e.link_faces
+            if len(lf) != 2:
+                continue
+            a, b = lf
+            la = next(lp for lp in a.loops if lp.edge == e)
+            lb = next(lp for lp in b.loops if lp.edge == e)
+            if (la[lay].uv - lb.link_loop_next[lay].uv).length < 1e-5 and (la.link_loop_next[lay].uv - lb[lay].uv).length < 1e-5:
+                parent[root(a.index)] = root(b.index)
+        groups = {}
+        for f in bm.faces:
+            groups.setdefault(root(f.index), []).append(f)
+        for faces in groups.values():
+            us = [lp[lay].uv for f in faces for lp in f.loops]
+            x0, x1 = min(u.x for u in us), max(u.x for u in us)
+            y0, y1 = min(u.y for u in us), max(u.y for u in us)
+            span = max(x1 - x0, y1 - y0)
+            if span > max_span:
+                k = max_span / span
+                c = ((x0 + x1) / 2, (y0 + y1) / 2)
+                for f in faces:
+                    for lp in f.loops:
+                        uv = lp[lay].uv
+                        lp[lay].uv = (c[0] + (uv.x - c[0]) * k, c[1] + (uv.y - c[1]) * k)
+                fixed += 1
+        bmesh.update_edit_mesh(o.data)
+    print(f'islas limitadas a {max_span} m: {fixed}')
+
+
 def shrink_hidden_faces(objs, tree):
     """
     Caras que nadie ve (tapadas por otra pieza pegada, dentro de muros o bajo losas): se reducen a
@@ -94,8 +157,11 @@ def shrink_hidden_faces(objs, tree):
         bm = bmesh.from_edit_mesh(o.data)
         bm.verts.ensure_lookup_table()
         layer = bm.loops.layers.uv['lightmap']
+        mark = bm.faces.layers.int.get('lm_pre')
         for f in bm.faces:
             total += 1
+            if mark is not None and f[mark]:
+                continue  # los textiles se apoyan unos en otros: sus caras siempre se ven
             c = f.calc_center_median()
             n = f.normal
             hidden = (n.z < -0.9 and c.z < 0.05) or c.z < -0.65

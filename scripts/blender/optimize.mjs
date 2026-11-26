@@ -53,7 +53,7 @@ const TEX = {
   sand: [4.0, true, false],
 }
 
-const HERO_NORMALS = new Set(['oak', 'limestone', 'greystone', 'travertine'])
+const HERO_NORMALS = new Set(['oak', 'limestone', 'greystone', 'travertine', 'concrete', 'bali', 'cumaru', 'basalt'])
 
 async function ktx(src, dst, opts, size) {
   let buf = readFileSync(src)

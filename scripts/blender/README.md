@@ -59,7 +59,7 @@ Variables útiles: `LM_SIZE` (resolución del atlas, 4096 por defecto) y `LM_SAM
 ## Dónde tocar
 
 - Materiales, texturas y tintes: `MATS` en `common.py` (y `TEX` en `optimize.mjs` para la web).
-- Muebles nuevos: `kit.py`. Qué pieza procedural se reemplaza por cuál: `assemble()` en `build.py`.
+- Muebles nuevos: `kit.py`. Textiles simulados (almohadas infladas, acolchados, mantas, toallas, cortinas): `soft.py`; `softtest.py bed|sofa` renderiza una pieza aislada para revisarla. Qué pieza procedural se reemplaza por cuál: `assemble()` en `build.py`.
 - Luminarias horneadas: `src/data/lighting.ts` (las mismas que usa la versión procedural).
 - Balance entre canales del atlas en la web: `BAKE_GAIN` en `src/scene/Atmosphere.tsx`.
 
