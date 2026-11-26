@@ -23,6 +23,8 @@ interface State {
   /** posición y yaw actuales de la cámara para el minimapa */
   cam: { x: number; y: number; z: number; yaw: number }
   ready: boolean
+  /** la casa activa es la horneada en Blender */
+  baked: boolean
   loadStage: string
   loadProgress: number
   contactOpen: boolean
@@ -48,6 +50,7 @@ export const useStore = create<State>((set) => ({
   transitioning: false,
   cam: { x: 0, y: 0, z: 0, yaw: 0 },
   ready: false,
+  baked: false,
   loadStage: 'Preparando',
   loadProgress: 0,
   contactOpen: false,

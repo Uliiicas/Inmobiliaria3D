@@ -93,8 +93,41 @@ function scaleUV(g: BufferGeometry, s: number) {
   return g
 }
 
+/** Pieza semántica (mueble, árbol…) registrada para el pipeline de Blender */
+export interface Placement {
+  id: string
+  kind: string
+  /** posición del pie del objeto */
+  p: [number, number, number]
+  rot: number
+  /** parámetros propios del tipo (medidas, material, escala…) */
+  args: Record<string, number | string>
+}
+
 export class Builder {
   buckets = new Map<MatKey, BufferGeometry[]>()
+  /**
+   * Sólo para exportar a Blender: si está activo, cada geometría se guarda además
+   * con la etiqueta vigente (arquitectura o la pieza de mobiliario que la generó).
+   */
+  recordTags = false
+  tag = 'arch'
+  tagged: { tag: string; mat: MatKey; geom: BufferGeometry }[] = []
+  placements: Placement[] = []
+  private counter = 0
+
+  /** Ejecuta fn atribuyendo su geometría a una pieza nombrada */
+  piece(kind: string, p: [number, number, number], rot: number, args: Record<string, number | string>, fn: () => void) {
+    const prev = this.tag
+    const id = `${kind}#${this.counter++}`
+    if (this.recordTags) this.placements.push({ id, kind, p, rot, args })
+    this.tag = id
+    try {
+      fn()
+    } finally {
+      this.tag = prev
+    }
+  }
   /** mallas que no deben proyectar sombra (vidrio, luces) */
   static noShadow: MatKey[] = ['glass', 'glassFrosted', 'glow', 'cove', 'fire', 'mirror']
 
@@ -108,6 +141,7 @@ export class Builder {
       const n = g.attributes.position.count
       g.setAttribute('uv', new Float32BufferAttribute(new Float32Array(n * 2), 2))
     }
+    if (this.recordTags) this.tagged.push({ tag: this.tag, mat, geom: g.clone() })
     let arr = this.buckets.get(mat)
     if (!arr) this.buckets.set(mat, (arr = []))
     arr.push(g)

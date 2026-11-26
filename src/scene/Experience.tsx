@@ -56,8 +56,9 @@ export default function Experience() {
         toneMapping: p.post ? NoToneMapping : ACESFilmicToneMapping,
         stencil: false,
       }}
-      onCreated={({ gl }) => {
+      onCreated={({ gl, scene }) => {
         gl.toneMapping = p.post ? NoToneMapping : ACESFilmicToneMapping
+        if (import.meta.env.DEV) (window as unknown as { __three: unknown }).__three = { gl, scene, runtime }
       }}
     >
       <PerformanceMonitor
