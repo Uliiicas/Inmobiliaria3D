@@ -1,0 +1,31 @@
+{
+  "$comment": "Lista de recursos a generar con la API oficial de Higgsfield (https://docs.higgsfield.ai). Cada 'model' es la ruta del endpoint en https://api.higgsfield.ai/<model>. Verifique en su consola de Higgsfield qué modelos tiene habilitados y ajuste 'model' y 'params' antes de ejecutar. Los campos de 'params' se envían tal cual en el cuerpo JSON.",
+  "style": "Ultra-luxury contemporary oceanfront residence, architectural photography, board-formed exposed concrete, natural oak and cumaru wood, grey stone, floor-to-ceiling low-iron glass, warm white and sand palette, minimalist designer furniture, soft natural light, 24mm tilt-shift lens, photorealistic, editorial, no people, no text, no watermark",
+  "defaults": {
+    "image": { "model": "higgsfield-ai/soul/v2/standard", "params": {} },
+    "video": { "model": "bytedance/seedance-2.0/reference-to-video", "params": { "duration": 6, "resolution": "1080p", "aspect_ratio": "16:9", "generate_audio": false } }
+  },
+  "assets": [
+    { "id": "fachada", "room": "acceso", "kind": "image", "title": "Fachada de acceso", "prompt": "North entrance facade at golden hour seen from a stone path floating over a reflecting pool, two-storey volume, upper floor clad in vertical cumaru slats, ground floor exposed concrete with a 3.2 m oak pivot door" },
+    { "id": "hall", "room": "hall", "kind": "image", "title": "Hall de entrada", "prompt": "Entrance hall with honed beige limestone floor, cantilevered solid oak floating staircase anchored to a board-formed concrete wall, frameless glass balustrade, bronze sculpture on travertine plinth" },
+    { "id": "living", "room": "living", "kind": "image", "title": "Living de doble altura", "prompt": "Double-height living room, 7 m ceiling, 10 m wide floor-to-ceiling glass wall facing the ocean horizon, linen sofas, travertine coffee table, suspended bronze ring chandelier, late afternoon sun" },
+    { "id": "comedor", "room": "comedor", "kind": "image", "title": "Comedor", "prompt": "Dining room with a 3.6 m solid walnut table for ten, linen chairs, linear bronze pendant lamp, glass wall to the ocean, sunset light" },
+    { "id": "cocina", "room": "cocina", "kind": "image", "title": "Cocina", "prompt": "Designer kitchen with a 4.2 m monolithic Calacatta marble island, handleless rift oak cabinetry, integrated appliances, leather bar stools, soft morning light" },
+    { "id": "sala-estar", "room": "sala-estar", "kind": "image", "title": "Sala de estar", "prompt": "Intimate family lounge with a full-height Roman travertine wall, charcoal wool sofa, cognac leather armchairs, floating walnut shelf, ocean view" },
+    { "id": "piscina", "room": "piscina", "kind": "image", "title": "Piscina infinita", "prompt": "22 m infinity pool lined with green Sukabumi stone merging with the ocean horizon, cumaru wood deck, sun loungers, the house glass facade reflected, golden hour" },
+    { "id": "galeria", "room": "galeria", "kind": "image", "title": "Galería exterior", "prompt": "Covered outdoor gallery under a 4 m concrete cantilever with cumaru slatted soffit, limestone floor continuous with the interior, outdoor dining table, ocean beyond" },
+    { "id": "dormitorio-principal", "room": "dormitorio-principal", "kind": "image", "title": "Dormitorio principal", "prompt": "Primary bedroom suite facing the ocean through a floor-to-ceiling glass wall, floating walnut bed platform, washed linen bedding, continuous walnut headboard wall with indirect light, dawn light" },
+    { "id": "banio-principal", "room": "banio-principal", "kind": "image", "title": "Baño principal", "prompt": "Primary bathroom with a freestanding carved stone bathtub in front of a 4 m panoramic window to the ocean, travertine walls, double vanity, spa atmosphere" },
+    { "id": "balcon", "room": "balcon", "kind": "image", "title": "Balcón panorámico", "prompt": "28 m long upper floor balcony with frameless glass balustrade overlooking an infinity pool and the ocean at sunset, cumaru deck, linen loungers" },
+    { "id": "noche", "room": "living", "kind": "image", "title": "Residencia de noche", "prompt": "The oceanfront residence at blue hour seen from the cliff edge, warm interior lights glowing through the glass, illuminated infinity pool, garden uplights, starry sky" },
+    { "id": "recorrido-living", "room": "living", "kind": "video", "title": "Secuencia cinematográfica del living", "fromImages": ["living"], "prompt": "Slow cinematic dolly forward through the double-height living room toward the glass wall and the ocean, gentle camera movement, natural light, architectural film" },
+    { "id": "recorrido-piscina", "room": "piscina", "kind": "video", "title": "Secuencia de la piscina al atardecer", "fromImages": ["piscina"], "prompt": "Slow lateral drone move along the infinity pool at sunset, water shimmering, ocean horizon, calm luxurious mood" }
+  ],
+  "textures": {
+    "$comment": "Opcional: texturas tileables (vista frontal, sin perspectiva). Se usan como 'map' en lugar de las procedurales.",
+    "marble": { "prompt": "Seamless tileable texture, Calacatta marble slab, flat top-down orthographic scan, even lighting, book-matched grey veins on white" },
+    "travertine": { "prompt": "Seamless tileable texture, Roman travertine stone, flat top-down orthographic scan, even lighting, warm beige with horizontal pores" },
+    "concrete": { "prompt": "Seamless tileable texture, board-formed exposed architectural concrete, flat orthographic, even lighting, horizontal pine board imprints" },
+    "oak": { "prompt": "Seamless tileable texture, natural oiled European oak floor planks, flat top-down orthographic scan, even lighting" }
+  }
+}
