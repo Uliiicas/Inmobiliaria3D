@@ -204,7 +204,9 @@ async function boot() {
   try {
     manifest = await (await fetch(`${BASE}video/tour.json`)).json()
   } catch {
-    loaderText.textContent = 'No se encontraron los videos del recorrido'
+    // todavía no hay videos publicados: se avisa y se ofrece volver al recorrido 3D
+    loaderText.innerHTML = 'El recorrido en video se está renderizando. <a class="underline" href="../">Ver el recorrido 3D</a>'
+    loaderBar.parentElement?.remove()
     return
   }
   for (const v of manifest.variants) makeLayer(v)
