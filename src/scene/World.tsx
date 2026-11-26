@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import {
   BufferGeometry,
+  Material,
+  Mesh,
   Color,
   ConeGeometry,
   DynamicDrawUsage,
@@ -25,46 +27,108 @@ import { useStore } from '../state/store'
 import { PROFILES } from '../lib/quality'
 import { runtime } from '../lib/runtime'
 import { loadHiggsfieldManifest } from '../lib/higgsfield'
+import { loadBakedHouse, loadBakedManifest, upgradeTextures, type BakedHouse } from './baked'
 
 const wait = () => new Promise((r) => setTimeout(r, 16))
 
-/** Construye la casa por etapas para no bloquear la interfaz y reportar progreso real */
+type Built =
+  | { kind: 'procedural'; geoms: Map<MatKey, BufferGeometry>; set: MaterialSet; door: Material }
+  | { kind: 'baked'; house: BakedHouse; set: MaterialSet; door: Material }
+
+const NO_CAST = new Set(['glass', 'glassFrosted', 'glow', 'cove', 'fire', 'mirror', 'grass', 'sand'])
+const NO_RECEIVE = new Set(['glass', 'glassFrosted', 'glow', 'cove', 'fire'])
+
+/**
+ * Construye la casa por etapas para no bloquear la interfaz y reportar progreso real.
+ * Primero intenta la versión horneada en Blender (public/models); si no está disponible o falla,
+ * usa la casa procedural de siempre.
+ */
 export function World() {
   const quality = useStore((s) => s.quality)
   const setStore = useStore((s) => s.set)
   const profile = PROFILES[quality]
-  // la resolución de texturas se decide una sola vez para no reconstruir la casa en vivo
+  // la resolución de texturas y el tipo de casa se deciden una sola vez para no reconstruir en vivo
   const [texSize] = useState(() => profile.texSize)
-  const [data, setData] = useState<{ geoms: Map<MatKey, BufferGeometry>; set: MaterialSet } | null>(null)
+  const [initialQuality] = useState(() => quality)
+  const [data, setData] = useState<Built | null>(null)
   const { gl, scene, camera } = useThree()
 
   useEffect(() => {
     let cancelled = false
-    let built: { geoms: Map<MatKey, BufferGeometry>; set: MaterialSet } | null = null
+    let built: Built | null = null
     ;(async () => {
-      setStore({ loadStage: 'Componiendo materiales', loadProgress: 0.12 })
+      setStore({ loadStage: 'Componiendo materiales', loadProgress: 0.08 })
       await wait()
       const set = createMaterials(texSize)
+      // la puerta se mueve: usa su propia copia del roble, sin atlas de luz
+      const door = (set.mats.oak as MeshStandardMaterial).clone()
       if (cancelled) return set.dispose()
+      const manifest = await loadBakedManifest()
+      if (manifest && !cancelled) {
+        try {
+          setStore({ loadStage: 'Cargando la residencia', loadProgress: 0.12 })
+          const house = await loadBakedHouse(gl, manifest, set, initialQuality, (p) =>
+            setStore({ loadProgress: 0.12 + p * 0.6 }),
+          )
+          if (cancelled) {
+            house.dispose()
+            return set.dispose()
+          }
+          runtime.baked = true
+          setStore({ baked: true })
+          built = { kind: 'baked', house, set, door }
+          runtime.materials = set
+          setStore({ loadStage: 'Calibrando la luz', loadProgress: 0.78 })
+          setData(built)
+          upgradeTextures(gl, set, manifest, initialQuality).then(() => {
+            const oak = set.mats.oak as MeshStandardMaterial
+            const d = door as MeshStandardMaterial
+            d.map = oak.map
+            d.normalMap = oak.normalMap
+            d.roughnessMap = oak.roughnessMap
+            d.color.copy(oak.color)
+            d.needsUpdate = true
+          })
+          return
+        } catch (e) {
+          console.warn('[baked] no se pudo cargar la casa horneada, se usa la procedural', e)
+        }
+      }
+      runtime.baked = false
       setStore({ loadStage: 'Levantando la arquitectura', loadProgress: 0.48 })
       await wait()
       const geoms = buildHouse()
       if (cancelled) return
-      built = { geoms, set }
+      built = { kind: 'procedural', geoms, set, door }
       runtime.materials = set
       setStore({ loadStage: 'Calibrando la luz', loadProgress: 0.74 })
       setData(built)
-      const manifest = await loadHiggsfieldManifest()
-      if (manifest?.textures && !cancelled) applyTextureOverrides(set, manifest.textures)
+      const hf = await loadHiggsfieldManifest()
+      if (hf?.textures && !cancelled) applyTextureOverrides(set, hf.textures)
     })()
     return () => {
       cancelled = true
       if (built) {
-        built.geoms.forEach((g) => g.dispose())
+        if (built.kind === 'procedural') built.geoms.forEach((g) => g.dispose())
+        else built.house.dispose()
         built.set.dispose()
+        built.door.dispose()
       }
     }
-  }, [texSize, setStore])
+  }, [texSize, initialQuality, setStore, gl])
+
+  // sombras de la casa horneada según el perfil de calidad
+  useEffect(() => {
+    if (data?.kind !== 'baked') return
+    data.house.root.traverse((o) => {
+      const mesh = o as Mesh
+      if (!mesh.isMesh) return
+      const key = (mesh.material as Material).name
+      mesh.castShadow = profile.shadows && !NO_CAST.has(key)
+      mesh.receiveShadow = profile.shadows && !NO_RECEIVE.has(key)
+      if (key === 'glass' || key === 'glassFrosted') mesh.renderOrder = 2
+    })
+  }, [data, profile.shadows])
 
   // compilar shaders antes de mostrar la escena
   useEffect(() => {
@@ -90,17 +154,21 @@ export function World() {
   if (!data) return null
   return (
     <group>
-      {[...data.geoms.entries()].map(([k, g]) => (
-        <mesh
-          key={k}
-          geometry={g}
-          material={data.set.mats[k]}
-          castShadow={profile.shadows && !Builder.noShadow.includes(k) && k !== 'grass' && k !== 'sand'}
-          receiveShadow={profile.shadows && k !== 'glass' && k !== 'glow' && k !== 'cove' && k !== 'fire'}
-          renderOrder={k === 'glass' || k === 'glassFrosted' ? 2 : 0}
-        />
-      ))}
-      <Door set={data.set} />
+      {data.kind === 'baked' ? (
+        <primitive object={data.house.root} />
+      ) : (
+        [...data.geoms.entries()].map(([k, g]) => (
+          <mesh
+            key={k}
+            geometry={g}
+            material={data.set.mats[k]}
+            castShadow={profile.shadows && !Builder.noShadow.includes(k) && k !== 'grass' && k !== 'sand'}
+            receiveShadow={profile.shadows && k !== 'glass' && k !== 'glow' && k !== 'cove' && k !== 'fire'}
+            renderOrder={k === 'glass' || k === 'glassFrosted' ? 2 : 0}
+          />
+        ))
+      )}
+      <Door set={data.set} material={data.door} />
       <Pool />
       <Ocean />
       {profile.grass > 0 && <Grasses count={profile.grass} />}
@@ -109,18 +177,24 @@ export function World() {
 }
 
 /** Puerta pivotante de roble de 2,0 × 3,2 m. Se abre con el recorrido o en el modo 360° */
-function Door({ set }: { set: MaterialSet }) {
+function Door({ set, material }: { set: MaterialSet; material: Material }) {
   const ref = useRef<Group>(null)
+  // material propio: el bronce compartido puede llevar atlas de luz y la puerta no tiene ese canal UV
+  const handle = useMemo(() => {
+    const b = set.mats.bronze as MeshStandardMaterial
+    return new MeshStandardMaterial({ color: b.color, roughness: b.roughness, metalness: b.metalness })
+  }, [set])
+  useEffect(() => () => handle.dispose(), [handle])
   useFrame(() => {
     if (!ref.current) return
     ref.current.rotation.y = -runtime.door * Math.PI * 0.46
   })
   return (
     <group position={[1.65, 0, -8.15]} ref={ref}>
-      <mesh position={[0.35, 1.6, 0]} material={set.mats.oak} castShadow receiveShadow>
+      <mesh position={[0.35, 1.6, 0]} material={material} castShadow receiveShadow>
         <boxGeometry args={[1.98, 3.18, 0.1]} />
       </mesh>
-      <mesh position={[1.1, 1.2, -0.08]} material={set.mats.bronze}>
+      <mesh position={[1.1, 1.2, -0.08]} material={handle}>
         <boxGeometry args={[0.03, 1.2, 0.04]} />
       </mesh>
     </group>

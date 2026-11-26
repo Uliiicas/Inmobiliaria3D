@@ -23,22 +23,10 @@ import { computeDaylight, type DaylightState } from '../lib/daylight'
 import { useStore } from '../state/store'
 import { PROFILES } from '../lib/quality'
 import { runtime } from '../lib/runtime'
+import { LAMPS } from '../data/lighting'
+import { ROOF } from '../data/rooms'
+import { bakedUniforms } from './baked'
 
-/** Luces artificiales: [x, y, z, color, intensidad, alcance]. Ordenadas por prioridad */
-const LAMPS: [number, number, number, string, number, number][] = [
-  [3, 5.0, 3.6, '#ffc98f', 9, 14], // living (anillo)
-  [2, 3.0, 10.2, '#ffcf9c', 5, 12], // galería
-  [0, -0.6, 15.7, '#6fd6e6', 6, 14], // piscina
-  [11, 2.2, -2.6, '#ffd2a1', 5, 9], // cocina
-  [11, 2.2, 5, '#ffc68a', 5, 9], // comedor
-  [3, 3.0, -5, '#ffd3a3', 4, 9], // hall
-  [-6, 6.3, 5, '#ffc48a', 4, 9], // dormitorio principal
-  [3.6, 6.4, -5, '#ffcb94', 4, 9], // sala privada
-  [-5, 2.9, 4.5, '#ffc48a', 3.5, 8], // sala de estar
-  [11, 6.4, 6, '#ffc48a', 3.5, 8], // dormitorio secundario
-  [13.5, 0.9, 16.4, '#ff8a3c', 4, 7], // fogón
-  [2, 3.0, -9.6, '#ffd2a0', 5, 10], // acceso
-]
 
 const NIGHT_VERT = /* glsl */ `
 varying vec3 vDir;
@@ -54,8 +42,18 @@ void main(){
 }
 `
 
+/** Ganancias del atlas de luz horneado (calibradas contra la iluminación en tiempo real) */
+const BAKE_GAIN = { sky: 4.5, sun: Math.PI * 1.6, lamps: Math.PI }
+const LAMP_TINT = new Color('#ffc58e')
+/** apertura extra dentro de la casa: más de día (sólo luz indirecta) que de noche (luminarias) */
+const INTERIOR_EXPOSURE = { day: 6.5, night: 2.3 }
+const SKY_DESAT = 0.75
+const SKY_NEUTRAL = new Color()
+
 export function Atmosphere() {
-  const { gl, scene } = useThree()
+  const { gl, scene, camera } = useThree()
+  const interior = useRef(0)
+  const baked = useStore((s) => s.baked)
   const quality = useStore((s) => s.quality)
   const profile = PROFILES[quality]
   const sun = useRef<DirectionalLight>(null)
@@ -153,7 +151,14 @@ export function Atmosphere() {
     }
     const fog = scene.fog as Fog | null
     if (fog) fog.color.copy(d.fog)
-    gl.toneMappingExposure = d.exposure
+    // Como un fotógrafo de interiores: dentro de la casa horneada se abre la exposición
+    // (los ventanales quedan luminosos y el interior se lee con detalle)
+    const c = camera.position
+    const inside = runtime.baked && c.x > -14.2 && c.x < 14.2 && c.z > -8.2 && c.z < 9.6 && c.y < ROOF ? 1 : 0
+    interior.current = MathUtils.lerp(interior.current, inside, st.reducedMotion ? 1 : 1 - Math.exp(-dt * 2.5))
+    const ie = MathUtils.lerp(INTERIOR_EXPOSURE.day, INTERIOR_EXPOSURE.night, MathUtils.clamp(runtime.artificial, 0, 1))
+    runtime.exposureBoost = 1 + interior.current * (ie - 1)
+    gl.toneMappingExposure = d.exposure * runtime.exposureBoost
 
     // iluminación artificial
     const mode = st.interiorLights
@@ -166,6 +171,17 @@ export function Atmosphere() {
       const flicker = i === 10 ? 0.85 + Math.sin(runtime.time * 11) * 0.08 + Math.sin(runtime.time * 23) * 0.06 : 1
       l.intensity = base * (i === 10 ? Math.max(a, 0.35) : a) * flicker
     })
+    // casa horneada: la luz indirecta del atlas se tiñe con el cielo, el sol y las luminarias de esta hora
+    if (runtime.baked) {
+      const u = bakedUniforms
+      // el cielo que entra por los ventanales se lee casi neutro (balance de blancos de interior)
+      const sky = u.uSkyIrr.value.copy(d.hemiSky)
+      const lum = sky.r * 0.2126 + sky.g * 0.7152 + sky.b * 0.0722
+      sky.lerp(SKY_NEUTRAL.setScalar(lum), SKY_DESAT).multiplyScalar(d.hemiIntensity * BAKE_GAIN.sky)
+      u.uSunIrr.value.copy(d.keyColor).multiplyScalar(d.keyIntensity * BAKE_GAIN.sun)
+      u.uLampIrr.value.copy(LAMP_TINT).multiplyScalar(a * BAKE_GAIN.lamps)
+      u.uSunGate.value = PROFILES[st.quality].shadows ? 0 : 1
+    }
     const m = runtime.materials
     if (m) {
       m.emissive.glow.emissiveIntensity = 0.15 + a * 2.6
@@ -191,7 +207,8 @@ export function Atmosphere() {
     }
   })
 
-  const n = Math.min(profile.pointLights, LAMPS.length)
+  // con la casa horneada las luminarias ya están en el atlas: sólo queda la del fogón (parpadea)
+  const n = baked ? 0 : Math.min(profile.pointLights, LAMPS.length)
   const s = profile.shadowMap
   return (
     <>

@@ -219,7 +219,7 @@ function upperFloor(b: Builder) {
 
 /* ─────────────────────────────── mobiliario ─────────────────────────────── */
 
-function sofa(b: Builder, x: number, y: number, z: number, w: number, d: number, rot: number, mat: 'linen' | 'wool' | 'leather' = 'linen') {
+function sofa_(b: Builder, x: number, y: number, z: number, w: number, d: number, rot: number, mat: 'linen' | 'wool' | 'leather' = 'linen') {
   const c = Math.cos(rot)
   const s = Math.sin(rot)
   const at = (lx: number, lz: number): [number, number] => [x + lx * c + lz * s, z - lx * s + lz * c]
@@ -239,14 +239,14 @@ function sofa(b: Builder, x: number, y: number, z: number, w: number, d: number,
   b.box('metal', p[0], y + 0.02, p[1], w - 0.1, 0.04, d - 0.1, rot)
 }
 
-function armchair(b: Builder, x: number, y: number, z: number, rot: number, mat: 'linen' | 'wool' | 'leather' = 'wool') {
+function armchair_(b: Builder, x: number, y: number, z: number, rot: number, mat: 'linen' | 'wool' | 'leather' = 'wool') {
   b.rounded(mat, x, y + 0.22, z, 0.85, 0.44, 0.85, 0.12, rot)
   const c = Math.cos(rot)
   const s = Math.sin(rot)
   b.rounded(mat, x - 0.34 * s, y + 0.55, z - 0.34 * c, 0.85, 0.5, 0.18, 0.08, rot)
 }
 
-function bed(b: Builder, x: number, y: number, z: number, w: number, l: number, rot: number) {
+function bed_(b: Builder, x: number, y: number, z: number, w: number, l: number, rot: number) {
   const c = Math.cos(rot)
   const s = Math.sin(rot)
   const at = (lx: number, lz: number): [number, number] => [x + lx * c + lz * s, z - lx * s + lz * c]
@@ -270,7 +270,7 @@ function bed(b: Builder, x: number, y: number, z: number, w: number, l: number, 
   }
 }
 
-function table(b: Builder, x: number, y: number, z: number, w: number, d: number, h: number, top: 'walnut' | 'marble' | 'travertine' | 'oak', rot = 0) {
+function table_(b: Builder, x: number, y: number, z: number, w: number, d: number, h: number, top: 'walnut' | 'marble' | 'travertine' | 'oak', rot = 0) {
   b.box(top, x, y + h - 0.03, z, w, 0.06, d, rot)
   const c = Math.cos(rot)
   const s = Math.sin(rot)
@@ -280,7 +280,7 @@ function table(b: Builder, x: number, y: number, z: number, w: number, d: number
   }
 }
 
-function chair(b: Builder, x: number, y: number, z: number, rot: number) {
+function chair_(b: Builder, x: number, y: number, z: number, rot: number) {
   const c = Math.cos(rot)
   const s = Math.sin(rot)
   b.rounded('linen', x, y + 0.46, z, 0.5, 0.08, 0.5, 0.03, rot)
@@ -294,11 +294,11 @@ function chair(b: Builder, x: number, y: number, z: number, rot: number) {
     b.box('oak', x + lx * c + lz * s, y + 0.21, z - lx * s + lz * c, 0.035, 0.42, 0.035, rot)
 }
 
-function rug(b: Builder, x: number, y: number, z: number, w: number, d: number, rot = 0) {
+function rug_(b: Builder, x: number, y: number, z: number, w: number, d: number, rot = 0) {
   b.rounded('wool', x, y + 0.012, z, w, 0.024, d, 0.01, rot)
 }
 
-function plant(b: Builder, x: number, y: number, z: number, scale = 1) {
+function plant_(b: Builder, x: number, y: number, z: number, scale = 1) {
   b.cyl('concreteDark', x, y + 0.25 * scale, z, 0.28 * scale, 0.22 * scale, 0.5 * scale, 20)
   b.cyl('trunk', x, y + 0.9 * scale, z, 0.02 * scale, 0.03 * scale, 0.9 * scale, 6)
   for (let k = 0; k < 6; k++) {
@@ -307,13 +307,13 @@ function plant(b: Builder, x: number, y: number, z: number, scale = 1) {
   }
 }
 
-function floorLamp(b: Builder, x: number, y: number, z: number) {
+function floorLamp_(b: Builder, x: number, y: number, z: number) {
   b.cyl('metal', x, y + 0.01, z, 0.16, 0.16, 0.02, 20)
   b.cyl('metal', x, y + 0.8, z, 0.012, 0.012, 1.6, 8)
   b.cyl('glow', x, y + 1.62, z, 0.16, 0.22, 0.24, 24)
 }
 
-function pendantLine(b: Builder, x: number, y: number, z: number, len: number, alongX = true) {
+function pendantLine_(b: Builder, x: number, y: number, z: number, len: number, alongX = true) {
   const w = alongX ? len : 0.06
   const d = alongX ? 0.06 : len
   b.box('bronze', x, y + 0.03, z, w, 0.04, d)
@@ -325,12 +325,43 @@ function pendantLine(b: Builder, x: number, y: number, z: number, len: number, a
   }
 }
 
+
+/* Envoltorios que registran cada pieza para el pipeline de Blender (scripts/blender) */
+type Up = 'linen' | 'wool' | 'leather'
+function sofa(b: Builder, x: number, y: number, z: number, w: number, d: number, rot: number, mat: Up = 'linen') {
+  b.piece('sofa', [x, y, z], rot, { w, d, mat }, () => sofa_(b, x, y, z, w, d, rot, mat))
+}
+function armchair(b: Builder, x: number, y: number, z: number, rot: number, mat: Up = 'wool') {
+  b.piece('armchair', [x, y, z], rot, { mat }, () => armchair_(b, x, y, z, rot, mat))
+}
+function bed(b: Builder, x: number, y: number, z: number, w: number, l: number, rot: number) {
+  b.piece('bed', [x, y, z], rot, { w, l }, () => bed_(b, x, y, z, w, l, rot))
+}
+function table(b: Builder, x: number, y: number, z: number, w: number, d: number, h: number, top: 'walnut' | 'marble' | 'travertine' | 'oak', rot = 0) {
+  b.piece('table', [x, y, z], rot, { w, d, h, top }, () => table_(b, x, y, z, w, d, h, top, rot))
+}
+function chair(b: Builder, x: number, y: number, z: number, rot: number) {
+  b.piece('chair', [x, y, z], rot, {}, () => chair_(b, x, y, z, rot))
+}
+function rug(b: Builder, x: number, y: number, z: number, w: number, d: number, rot = 0) {
+  b.piece('rug', [x, y, z], rot, { w, d }, () => rug_(b, x, y, z, w, d, rot))
+}
+function plant(b: Builder, x: number, y: number, z: number, scale = 1) {
+  b.piece('plant', [x, y, z], 0, { scale }, () => plant_(b, x, y, z, scale))
+}
+function floorLamp(b: Builder, x: number, y: number, z: number) {
+  b.piece('floorLamp', [x, y, z], 0, {}, () => floorLamp_(b, x, y, z))
+}
+function pendantLine(b: Builder, x: number, y: number, z: number, len: number, alongX = true) {
+  b.piece('pendantLine', [x, y, z], 0, { len, alongX: alongX ? 1 : 0 }, () => pendantLine_(b, x, y, z, len, alongX))
+}
+
 function furnishGround(b: Builder) {
   const y = 0.004
   // ── Hall
   b.box('oak', 5.6, 0.22, -7.65, 3.2, 0.44, 0.45) // banco
   b.box('travertine', 5, 0.45, -4.3, 0.8, 0.9, 0.8) // pedestal
-  b.sphere('bronze', 5, 1.28, -4.3, 0.36, 1, 1.05, 1, 3)
+  b.piece('sculpture', [5, 0.9, -4.3], 0, {}, () => b.sphere('bronze', 5, 1.28, -4.3, 0.36, 1, 1.05, 1, 3))
   b.box('art1', 6.2, 1.9, -8.0, 1.8, 2.2, 0.04)
   b.box('cove', 3, H1 - 0.03, -5, 0.05, 0.02, 5.5)
   plant(b, 0.4, y, -7.4, 1.25)
@@ -378,8 +409,10 @@ function furnishGround(b: Builder) {
   b.box('marble', 11, 0.93, -2.6, 4.24, 0.03, 1.34)
   for (let i = 0; i < 4; i++) {
     const x = 9.6 + i * 0.95
-    b.cyl('leather', x, 0.72, -1.55, 0.2, 0.2, 0.06, 18)
-    b.cyl('metal', x, 0.36, -1.55, 0.02, 0.12, 0.7, 8)
+    b.piece('stool', [x, 0, -1.55], 0, {}, () => {
+      b.cyl('leather', x, 0.72, -1.55, 0.2, 0.2, 0.06, 18)
+      b.cyl('metal', x, 0.36, -1.55, 0.02, 0.12, 0.7, 8)
+    })
   }
   // muebles bajos bajo la ventana norte
   b.bb('oak', 8.1, 0, -7.98, 13.98, 0.88, -7.33)
@@ -498,10 +531,12 @@ function furnishUpper(b: Builder) {
   b.bb('glass', 12.3, y, -7.98, 12.33, y + 2.4, -5.2)
 
   // ── Balcón
-  for (const x of [-12, -10.6, 9.6, 11.0]) b.rounded('linen', x, y + 0.2, 10.9, 0.75, 0.3, 1.8, 0.08)
+  for (const x of [-12, -10.6, 9.6, 11.0]) b.piece('lounger', [x, y, 10.9], 0, { base: 0 }, () => b.rounded('linen', x, y + 0.2, 10.9, 0.75, 0.3, 1.8, 0.08))
   for (const x of [-3, 6]) {
-    b.box('concrete', x, y + 0.3, 11.5, 1.6, 0.6, 0.5)
-    b.sphere('foliage', x, y + 0.8, 11.5, 0.45, 1.6, 0.6, 0.5, 1)
+    b.piece('planter', [x, y, 11.5], 0, { w: 1.6, d: 0.5, h: 0.6 }, () => {
+      b.box('concrete', x, y + 0.3, 11.5, 1.6, 0.6, 0.5)
+      b.sphere('foliage', x, y + 0.8, 11.5, 0.45, 1.6, 0.6, 0.5, 1)
+    })
   }
 }
 
@@ -588,8 +623,10 @@ function exterior(b: Builder) {
   sofa(b, 15.3, deckY, 16.4, 2.0, 0.9, -Math.PI / 2, 'linen')
   // camastros a lo largo de la piscina
   for (const x of [-15, -13]) {
-    b.rounded('linen', x, 0.2, 16.5, 0.75, 0.25, 1.9, 0.08)
-    b.box('cumaru', x, 0.05, 16.5, 0.8, 0.1, 2.0)
+    b.piece('lounger', [x, 0, 16.5], 0, { base: 1 }, () => {
+      b.rounded('linen', x, 0.2, 16.5, 0.75, 0.25, 1.9, 0.08)
+      b.box('cumaru', x, 0.05, 16.5, 0.8, 0.1, 2.0)
+    })
   }
   // galería: mesa exterior y sillones
   table(b, -9, deckY, 10.2, 3.0, 1.0, 0.75, 'oak')
@@ -605,8 +642,23 @@ function exterior(b: Builder) {
     [-15.5, 12.5],
     [15.5, 12.5],
   ]) {
-    b.box('concrete', x, 0.3, z, 0.9, 0.6, 0.9)
-    b.sphere('foliage', x, 0.9, z, 0.6, 1, 0.8, 1, 1)
+    b.piece('planter', [x, 0, z], 0, { w: 0.9, d: 0.9, h: 0.6 }, () => {
+      b.box('concrete', x, 0.3, z, 0.9, 0.6, 0.9)
+      b.sphere('foliage', x, 0.9, z, 0.6, 1, 0.8, 1, 1)
+    })
+  }
+}
+
+
+function tree(b: Builder, x: number, y: number, z: number, s: number) {
+  b.cyl('trunk', x, y + 1.6 * s, z, 0.07 * s, 0.14 * s, 3.2 * s, 8)
+  b.cyl('trunk', x + 0.5 * s, y + 2.6 * s, z, 0.04 * s, 0.06 * s, 1.6 * s, 6)
+  // copa de olivo: racimos irregulares de follaje
+  for (let k = 0; k < 9; k++) {
+    const a = k * 2.399 + x
+    const r = (0.4 + ((k * 37) % 10) / 14) * s
+    const m = k % 3 === 0 ? 'foliageLight' : 'foliage'
+    b.sphere(m, x + Math.cos(a) * r * 1.1, y + (3.0 + (k % 4) * 0.28) * s, z + Math.sin(a) * r, (0.75 + (k % 3) * 0.18) * s, 1.25, 0.62, 1.15, 2)
   }
 }
 
@@ -628,24 +680,25 @@ function trees(b: Builder) {
   ]
   for (const [x, z, s] of spots) {
     const y = -0.6
-    b.cyl('trunk', x, y + 1.6 * s, z, 0.07 * s, 0.14 * s, 3.2 * s, 8)
     b.cyl('glow', x + 0.6, y + 0.04, z + 0.6, 0.12, 0.12, 0.06, 12) // proyector al pie del árbol
-    b.cyl('trunk', x + 0.5 * s, y + 2.6 * s, z, 0.04 * s, 0.06 * s, 1.6 * s, 6)
-    // copa de olivo: racimos irregulares de follaje
-    for (let k = 0; k < 9; k++) {
-      const a = k * 2.399 + x
-      const r = (0.4 + ((k * 37) % 10) / 14) * s
-      const m = k % 3 === 0 ? 'foliageLight' : 'foliage'
-      b.sphere(m, x + Math.cos(a) * r * 1.1, y + (3.0 + (k % 4) * 0.28) * s, z + Math.sin(a) * r, (0.75 + (k % 3) * 0.18) * s, 1.25, 0.62, 1.15, 2)
-    }
+    b.piece('tree', [x, y, z], 0, { scale: s }, () => tree(b, x, y, z, s))
   }
   // setos bajos que integran la casa al jardín
-  b.rounded('foliage', -16.5, -0.2, 0, 2, 0.8, 18, 0.35)
-  b.rounded('foliage', 16.5, -0.2, 0, 2, 0.8, 18, 0.35)
+  for (const x of [-16.5, 16.5]) b.piece('hedge', [x, -0.6, 0], 0, { w: 2, d: 18, h: 0.8 }, () => b.rounded('foliage', x, -0.2, 0, 2, 0.8, 18, 0.35))
 }
 
 export function buildHouse() {
+  return populate(new Builder()).merge()
+}
+
+/** Construye la casa registrando piezas y etiquetas: lo usa scripts/blender/export-geometry.ts */
+export function buildHouseTagged() {
   const b = new Builder()
+  b.recordTags = true
+  return populate(b)
+}
+
+function populate(b: Builder) {
   structure(b)
   groundFloor(b)
   upperFloor(b)
@@ -653,5 +706,5 @@ export function buildHouse() {
   furnishUpper(b)
   exterior(b)
   trees(b)
-  return b.merge()
+  return b
 }

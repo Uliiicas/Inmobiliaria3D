@@ -16,6 +16,10 @@ export const runtime = {
   tour: 0,
   /** distancia de enfoque para la profundidad de campo */
   focus: 6,
+  /** la casa activa es la horneada en Blender (luz indirecta en lightmaps) */
+  baked: false,
+  /** apertura extra de la exposición dentro de la casa (1 = ninguna) */
+  exposureBoost: 1,
   /** tiempo transcurrido */
   time: 0,
 }

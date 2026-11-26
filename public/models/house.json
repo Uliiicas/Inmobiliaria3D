@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "glb": "models/house.glb",
+  "lightmap": {
+    "high": "models/lightmap-4k.ktx2",
+    "low": "models/lightmap-2k.ktx2",
+    "scale": {
+      "sky": 0.9998984336853027,
+      "sun": 0.04868654906749725,
+      "lamps": 6.096860408782959
+    }
+  },
+  "textures": {
+    "concrete": {
+      "tile": 2.4,
+      "map": "models/textures/concrete/diff.ktx2",
+      "normalMap": "models/textures/concrete/nor.ktx2",
+      "roughnessMap": "models/textures/concrete/rough.ktx2"
+    },
+    "concreteDark": {
+      "tile": 2.4,
+      "map": "models/textures/concreteDark/diff.ktx2",
+      "normalMap": "models/textures/concreteDark/nor.ktx2"
+    },
+    "plaster": {
+      "tile": 3,
+      "map": "models/textures/plaster/diff.ktx2"
+    },
+    "microcement": {
+      "tile": 3,
+      "map": "models/textures/microcement/diff.ktx2",
+      "normalMap": "models/textures/microcement/nor.ktx2"
+    },
+    "limestone": {
+      "tile": 2.4,
+      "map": "models/textures/limestone/diff.ktx2",
+      "normalMap": "models/textures/limestone/nor.ktx2",
+      "roughnessMap": "models/textures/limestone/rough.ktx2"
+    },
+    "travertine": {
+      "tile": 1.6,
+      "map": "models/textures/travertine/diff.ktx2",
+      "normalMap": "models/textures/travertine/nor.ktx2",
+      "roughnessMap": "models/textures/travertine/rough.ktx2"
+    },
+    "greystone": {
+      "tile": 2,
+      "map": "models/textures/greystone/diff.ktx2",
+      "normalMap": "models/textures/greystone/nor.ktx2",
+      "roughnessMap": "models/textures/greystone/rough.ktx2"
+    },
+    "marble": {
+      "tile": 3,
+      "map": "models/textures/marble/diff.ktx2",
+      "roughnessMap": "models/textures/marble/rough.ktx2"
+    },
+    "basalt": {
+      "tile": 1.6,
+      "map": "models/textures/basalt/diff.ktx2",
+      "normalMap": "models/textures/basalt/nor.ktx2",
+      "roughnessMap": "models/textures/basalt/rough.ktx2"
+    },
+    "bali": {
+      "tile": 1.2,
+      "map": "models/textures/bali/diff.ktx2",
+      "normalMap": "models/textures/bali/nor.ktx2"
+    },
+    "oak": {
+      "tile": 2.2,
+      "map": "models/textures/oak/diff.ktx2",
+      "normalMap": "models/textures/oak/nor.ktx2",
+      "roughnessMap": "models/textures/oak/rough.ktx2"
+    },
+    "walnut": {
+      "tile": 1.2,
+      "map": "models/textures/walnut/diff.ktx2",
+      "roughnessMap": "models/textures/walnut/rough.ktx2"
+    },
+    "cumaru": {
+      "tile": 2,
+      "map": "models/textures/cumaru/diff.ktx2",
+      "normalMap": "models/textures/cumaru/nor.ktx2",
+      "roughnessMap": "models/textures/cumaru/rough.ktx2"
+    },
+    "smoked": {
+      "tile": 1.2,
+      "map": "models/textures/smoked/diff.ktx2"
+    },
+    "linen": {
+      "tile": 0.6,
+      "map": "models/textures/linen/diff.ktx2",
+      "normalMap": "models/textures/linen/nor.ktx2"
+    },
+    "wool": {
+      "tile": 0.5,
+      "map": "models/textures/wool/diff.ktx2",
+      "normalMap": "models/textures/wool/nor.ktx2"
+    },
+    "leather": {
+      "tile": 1,
+      "map": "models/textures/leather/diff.ktx2",
+      "normalMap": "models/textures/leather/nor.ktx2",
+      "roughnessMap": "models/textures/leather/rough.ktx2"
+    },
+    "grass": {
+      "tile": 4,
+      "map": "models/textures/grass/diff.ktx2",
+      "normalMap": "models/textures/grass/nor.ktx2"
+    },
+    "rock": {
+      "tile": 6,
+      "map": "models/textures/rock/diff.ktx2",
+      "normalMap": "models/textures/rock/nor.ktx2"
+    },
+    "sand": {
+      "tile": 4,
+      "map": "models/textures/sand/diff.ktx2",
+      "normalMap": "models/textures/sand/nor.ktx2"
+    }
+  }
+}
