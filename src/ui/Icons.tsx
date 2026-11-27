@@ -39,12 +39,6 @@ export const IconClose = (p: SVGProps<SVGSVGElement>) => (
     <path d="M5.5 5.5l13 13M18.5 5.5l-13 13" />
   </svg>
 )
-export const IconFilm = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <rect x="3" y="5.5" width="18" height="13" rx="1" />
-    <path d="M10 9.5v5l4.2-2.5L10 9.5Z" />
-  </svg>
-)
 export const IconInfo = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="9" />
