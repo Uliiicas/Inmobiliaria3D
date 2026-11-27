@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "scenes": [
+    {
+      "id": "fachada",
+      "kicker": "01 · Llegada",
+      "title": "Una casa frente al horizonte",
+      "text": "Una residencia diseñada para vivir entre la arquitectura, la naturaleza y el horizonte.",
+      "still": "stills/fachada.jpg",
+      "stillMobile": "stills/fachada-1280.jpg",
+      "move": { "scale": [1.04, 1.17], "x": [0, -1.2], "y": [0, 1], "origin": [45, 48] }
+    },
+    {
+      "id": "living",
+      "kicker": "02 · Living de doble altura",
+      "title": "El horizonte como muro",
+      "text": "Siete metros de altura libre y un frente vidriado de diez metros que convierte el océano en el protagonista.",
+      "still": "stills/living.jpg",
+      "stillMobile": "stills/living-1280.jpg",
+      "move": { "scale": [1.12, 1.12], "x": [2.6, -2.6], "y": [0, 0], "origin": [50, 50] }
+    },
+    {
+      "id": "comedor",
+      "kicker": "03 · Comedor",
+      "title": "Sobremesa frente al mar",
+      "text": "Una mesa de nogal de 3,6 m para diez comensales bajo una lámpara lineal de bronce.",
+      "still": "stills/comedor.jpg",
+      "stillMobile": "stills/comedor-1280.jpg",
+      "move": { "scale": [1.03, 1.15], "x": [0, 0], "y": [0, 0], "origin": [42, 42] }
+    },
+    {
+      "id": "piscina",
+      "kicker": "04 · Piscina infinita",
+      "title": "Horizonte líquido",
+      "text": "Veintidós metros de agua que se derraman sobre el borde y se confunden con el océano.",
+      "still": "stills/piscina.jpg",
+      "stillMobile": "stills/piscina-1280.jpg",
+      "move": { "scale": [1.02, 1.2], "x": [0, -1], "y": [0, 0], "origin": [62, 54] }
+    }
+  ]
+}

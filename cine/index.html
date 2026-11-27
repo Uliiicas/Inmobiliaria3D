@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#14110f" />
+    <title>Casa Horizonte — Recorrido cinematográfico</title>
+    <meta name="description" content="Casa Horizonte en escenas: deslice y la cámara avanza por la fachada, el living, el comedor y la piscina infinita." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2314110f'/%3E%3Cpath d='M6 20h20M9 14h14' stroke='%23e9dfcf' stroke-width='1.6'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <!-- escenas apiladas: cada una es un clip (o su imagen fija mientras no hay clip), se cruzan por opacidad -->
+    <div id="stage" class="fixed inset-0 overflow-hidden bg-ink" aria-hidden="true"></div>
+    <div class="cn-vignette pointer-events-none fixed inset-0" aria-hidden="true"></div>
+
+    <!-- espacio de scroll que conduce las escenas -->
+    <div id="spacer" aria-hidden="true"></div>
+
+    <header class="scrim-top pointer-events-none fixed inset-x-0 top-0 z-[50] flex items-start justify-between px-5 pt-5 pb-10 md:px-10 md:pt-7">
+      <a class="pointer-events-auto text-left" href="../" aria-label="Volver a la página principal">
+        <span class="display block text-[26px] leading-none md:text-[30px]">Casa Horizonte</span>
+        <span class="eyebrow mt-1.5 block !text-[9px]">Costa Atlántica · Private Estates</span>
+      </a>
+      <nav class="pointer-events-auto flex items-center gap-2">
+        <a class="btn btn-line !h-[42px] !px-4 max-sm:!hidden" href="../">Recorrido 3D interactivo</a>
+        <a class="icon-btn sm:!hidden" href="../" aria-label="Recorrido 3D interactivo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6" /></svg>
+        </a>
+      </nav>
+    </header>
+
+    <!-- portada -->
+    <section id="hero" class="pointer-events-none fixed inset-0 z-[30] flex flex-col justify-end transition-opacity duration-700" aria-label="Portada">
+      <div class="scrim-bottom px-5 pt-40 pb-14 md:px-10 md:pb-20">
+        <p class="eyebrow mb-5">Costa Atlántica · Frente al mar</p>
+        <h1 class="display max-w-[15ch] text-[clamp(42px,min(8.4vw,11vh),120px)]">Donde la arquitectura <em class="font-normal italic">se encuentra con el océano</em></h1>
+        <div class="mt-9 flex items-center gap-3 text-ivory/70">
+          <span class="cn-scrollcue" aria-hidden="true"></span>
+          <span class="eyebrow !text-[9.5px]">Deslizar para recorrer</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- textos de cada escena -->
+    <div id="caption" class="pointer-events-none fixed bottom-14 left-5 z-[31] max-w-[min(88vw,560px)] md:bottom-20 md:left-10" aria-live="polite">
+      <p id="cap-kicker" class="eyebrow mb-3"></p>
+      <h2 id="cap-title" class="display text-[clamp(36px,4.8vw,66px)]"></h2>
+      <p id="cap-text" class="caption mt-4 max-w-[42ch]"></p>
+    </div>
+
+    <!-- índice de escenas -->
+    <nav id="dots" class="fixed top-1/2 right-4 z-[31] flex -translate-y-1/2 flex-col gap-3 md:right-8" aria-label="Escenas"></nav>
+
+    <!-- cierre -->
+    <section id="outro" class="pointer-events-none fixed inset-0 z-[32] flex items-center justify-center opacity-0 transition-opacity duration-700" aria-label="Contacto">
+      <div class="panel-strong pointer-events-auto mx-5 max-w-[520px] px-8 py-9 text-center md:px-12">
+        <p class="eyebrow mb-4">Visitas privadas</p>
+        <p class="display text-[clamp(32px,4vw,48px)]">Conozca Casa Horizonte en persona</p>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+          <a class="btn btn-solid" href="../">Recorrer en 3D y agendar visita</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- carga -->
+    <div id="loader" class="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-ink transition-opacity duration-1000">
+      <p class="eyebrow mb-6">Costa Atlántica</p>
+      <p class="display text-center text-[clamp(44px,7vw,92px)]">Casa Horizonte</p>
+      <div class="mt-10 h-px w-[min(60vw,280px)] bg-ivory/15"><div id="loader-bar" class="h-px bg-ivory transition-[width] duration-500" style="width: 0%"></div></div>
+    </div>
+
+    <script type="module" src="/src/cine/main.ts"></script>
+  </body>
+</html>
