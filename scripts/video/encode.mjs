@@ -29,13 +29,13 @@ const files = readdirSync(frames).filter((f) => /^f\d{5}\.jpg$/.test(f)).sort()
 if (!files.length) throw new Error('no hay cuadros f00000.jpg en ' + frames)
 mkdirSync(OUT, { recursive: true })
 
-const common = ['-y', '-framerate', String(fps), '-start_number', files[0].slice(1, 6), '-i', join(frames, 'f%05d.jpg'), '-an',
+const common = ['-y', '-loglevel', 'error', '-framerate', String(fps), '-start_number', files[0].slice(1, 6), '-i', join(frames, 'f%05d.jpg'), '-an',
   '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-tune', 'film', '-g', '4', '-keyint_min', '4', '-bf', '0',
   '-sc_threshold', '0', '-movflags', '+faststart']
 const run = (args) => execFileSync('ffmpeg', args, { stdio: ['ignore', 'ignore', 'inherit'] })
 run([...common, '-vf', 'scale=1280:720:flags=lanczos', '-crf', '21', join(OUT, `tour-${id}.mp4`)])
 run([...common, '-vf', 'scale=854:480:flags=lanczos', '-crf', '24', join(OUT, `tour-${id}-480.mp4`)])
-run(['-y', '-i', join(frames, files[0]), '-vf', 'scale=1280:720', '-q:v', '4', join(OUT, `tour-${id}.jpg`)])
+run(['-y', '-loglevel', 'error', '-i', join(frames, files[0]), '-vf', 'scale=1280:720', '-q:v', '4', '-update', '1', join(OUT, `tour-${id}.jpg`)])
 
 const mfile = join(OUT, 'tour.json')
 const m = existsSync(mfile) ? JSON.parse(readFileSync(mfile, 'utf8')) : { version: 1, variants: [] }
