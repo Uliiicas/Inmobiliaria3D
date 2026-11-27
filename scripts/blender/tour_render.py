@@ -280,6 +280,10 @@ def add_door():
     door.parent = pivot
     if oak:
         door.data.materials.append(oak)
+    from build import box_uv
+
+    bpy.context.view_layer.update()
+    box_uv(door)
     return pivot
 
 
@@ -342,9 +346,10 @@ def main():
         cam.location = e
         cam.rotation_euler = (tg - e).to_track_quat('-Z', 'Y').to_euler()
         cam.data.angle_y = math.radians(fov)
-        door.rotation_euler = (0, 0, -d * math.pi * 0.46)
+        # en video la puerta corre dentro del muro (en la web pivota): pivotando, la cámara pasa rozando su canto
+        door.location = t2b(1.65 + 2.1 * d, 0, -8.15)
         sc.view_settings.exposure = lt['exp_out'] + lt['exp_in'] * inside
-        for ob, path in ((cam, 'location'), (cam, 'rotation_euler'), (door, 'rotation_euler')):
+        for ob, path in ((cam, 'location'), (cam, 'rotation_euler'), (door, 'location')):
             ob.keyframe_insert(path, frame=f)
         cam.data.keyframe_insert('lens', frame=f)
         sc.view_settings.keyframe_insert('exposure', frame=f)
